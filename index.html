@@ -404,6 +404,8 @@ tr:hover .ab{opacity:1}
     <div class="ng">Développement</div>
     <div class="ni" onclick="goTo('prospection',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Prospection</div>
     <div class="ni" onclick="goTo('tarifs',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Tarifs &amp; Services</div>
+    <div class="ng">Système</div>
+    <div class="ni" onclick="goTo('donnees',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0018 0V5"/><path d="M3 12a9 3 0 0018 0"/></svg>Données &amp; Backup</div>
   </nav>
   <div class="sb-foot">
   <div style="font-size:11px;padding:6px 10px 8px;text-align:center" id="cloud-badge" style="color:var(--t4)">☁️ Connexion...</div>
@@ -419,10 +421,6 @@ tr:hover .ab{opacity:1}
   <div class="topbar">
     <div><div class="tb-t" id="pt">Dashboard</div><div class="tb-s" id="ps"></div></div>
     <div style="display:flex;gap:8px;align-items:center">
-    <button onclick="showExportMenu()" class="btn" style="background:var(--bg3);border:1.5px solid var(--border2);color:var(--t2);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;border-radius:9px;padding:7px 14px;cursor:pointer">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Exporter
-    </button>
     <div id="ta" style="display:flex;gap:8px;align-items:center"></div>
   </div>
   </div>
@@ -554,6 +552,97 @@ tr:hover .ab{opacity:1}
         <button class="fb" onclick="ftarif('Impression',this)">Impression</button>
       </div>
       <div class="g3" id="tarifs-grid"></div>
+    </div>
+
+    <!-- DONNÉES & BACKUP -->
+    <div class="tab" id="tab-donnees">
+      <div class="g2" style="align-items:start">
+
+        <!-- Colonne gauche : Backup & Restore -->
+        <div>
+          <div class="card">
+            <div class="ch"><span class="ct">💾 Backup & Restauration</span></div>
+            <p style="font-size:13px;color:var(--t3);margin-bottom:16px;line-height:1.6">Sauvegarde complète de toutes tes données en local. En cas de bug, tu peux tout restaurer en 5 secondes.</p>
+
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="border:2px solid var(--danger);border-radius:10px;padding:14px 16px;cursor:pointer;background:var(--d10)" onclick="backupJSON()">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="width:38px;height:38px;background:rgba(229,56,59,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">🛡️</div>
+                  <div style="flex:1">
+                    <div style="font-weight:700;font-size:14px;color:var(--danger)">Télécharger un backup</div>
+                    <div style="font-size:12px;color:var(--t3);margin-top:2px">Fichier .json horodaté — clients, projets, devis, tarifs</div>
+                  </div>
+                  <div style="font-size:11px;font-weight:700;color:var(--danger);background:var(--d10);padding:3px 9px;border-radius:99px">.json</div>
+                </div>
+              </div>
+
+              <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer" onclick="document.getElementById('restore-file').click()">
+                <input type="file" id="restore-file" accept=".json" style="display:none" onchange="importJSON(this)">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="width:38px;height:38px;background:var(--i10);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">⬆️</div>
+                  <div style="flex:1">
+                    <div style="font-weight:600;font-size:14px">Restaurer depuis un backup</div>
+                    <div style="font-size:12px;color:var(--t3);margin-top:2px">Sélectionne un fichier .json — remplace les données actuelles</div>
+                  </div>
+                  <div style="font-size:11px;font-weight:700;color:var(--info);background:var(--i10);padding:3px 9px;border-radius:99px">.json</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:var(--w10);border-radius:8px;padding:10px 12px;margin-top:14px;font-size:12px;color:#c96a1a;line-height:1.5">
+              ⚠️ <strong>Conseil :</strong> Fais un backup après chaque session de travail importante. Stocke-le dans un dossier dédié.
+            </div>
+          </div>
+
+          <!-- Export Excel -->
+          <div class="card">
+            <div class="ch"><span class="ct">📊 Export Excel</span></div>
+            <p style="font-size:13px;color:var(--t3);margin-bottom:16px;line-height:1.6">Exporte tes données dans des fichiers .xlsx compatibles Numbers et Excel.</p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn bg" style="justify-content:space-between" onclick="exportFactures()">
+                <span>📊 Devis &amp; Factures</span><span style="font-size:11px;color:var(--t3)">.xlsx</span>
+              </button>
+              <button class="btn bg" style="justify-content:space-between" onclick="exportClients()">
+                <span>👥 Clients</span><span style="font-size:11px;color:var(--t3)">.xlsx</span>
+              </button>
+              <button class="btn bg" style="justify-content:space-between" onclick="exportProjets()">
+                <span>📁 Projets</span><span style="font-size:11px;color:var(--t3)">.xlsx</span>
+              </button>
+              <button class="btn bg" style="justify-content:space-between;border-color:var(--purple);color:var(--purple)" onclick="exportComplet()">
+                <span>📦 Export complet (3 onglets)</span><span style="font-size:11px">.xlsx</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne droite : État du système -->
+        <div>
+          <div class="card">
+            <div class="ch"><span class="ct">☁️ État de la synchronisation</span></div>
+            <div id="donnees-sync-status" style="margin-bottom:16px"></div>
+            <button class="btn bg" style="width:100%;justify-content:center" onclick="forceSyncNow()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Forcer la synchronisation Firebase
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="ch"><span class="ct">📋 Inventaire des données</span></div>
+            <div id="donnees-inventory"></div>
+          </div>
+
+          <div class="card" style="border-color:var(--danger)">
+            <div class="ch"><span class="ct" style="color:var(--danger)">⚠️ Zone dangereuse</span></div>
+            <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.5">Ces actions sont irréversibles. Fais toujours un backup avant.</p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn bd" style="justify-content:flex-start" onclick="resetSection('projets')">🗑️ Vider les projets uniquement</button>
+              <button class="btn bd" style="justify-content:flex-start" onclick="resetSection('leads')">🗑️ Vider les leads uniquement</button>
+              <button class="btn bd" style="justify-content:flex-start;background:var(--danger);color:#fff" onclick="resetAll()">💥 Tout réinitialiser</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
   </div>
@@ -721,8 +810,92 @@ function load(){
   if(!DB.leads)DB.leads=[];
 }
 function sv(){
-  localStorage.setItem(KEY,JSON.stringify(DB));
+  // BLINDAGE ANTI-CORRUPTION : ne jamais sauvegarder si les données semblent vides/corrompues
+  if(!DB || !DB.clients) return;
+  // Si on avait des données et qu'on essaie de sauvegarder vide → bloquer
+  const score = dbScore(DB);
+  const lastKnownScore = parseInt(localStorage.getItem(KEY+'_score')||'0');
+  // Autoriser la sauvegarde seulement si le score ne chute pas de plus de 50% d'un coup
+  if(lastKnownScore > 20 && score < lastKnownScore * 0.5){
+    console.warn('⚠️ sv() bloqué — score trop bas (',score,'vs',lastKnownScore,'). Données suspectes, sauvegarde annulée.');
+    return;
+  }
+  localStorage.setItem(KEY, JSON.stringify(DB));
+  localStorage.setItem(KEY+'_score', score);
+  localStorage.setItem(KEY+'_lastSave', new Date().toISOString());
   if(window._fbSave) window._fbSave(DB);
+}
+
+// ONGLET DONNÉES
+function rDonnees(){
+  // Sync status
+  const lastSave = localStorage.getItem(KEY+'_lastSave');
+  const score = dbScore(DB);
+  document.getElementById('donnees-sync-status').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg3);border-radius:8px">
+        <span style="font-size:13px;color:var(--t2)">Statut Firebase</span>
+        <span id="donnees-cloud-state" style="font-size:12px;font-weight:600">${document.getElementById('cloud-badge')?.textContent||'...'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg3);border-radius:8px">
+        <span style="font-size:13px;color:var(--t2)">Dernière sauvegarde locale</span>
+        <span style="font-size:12px;font-weight:600;color:var(--t3)">${lastSave?new Date(lastSave).toLocaleString('fr-BE'):'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg3);border-radius:8px">
+        <span style="font-size:13px;color:var(--t2)">Score de richesse des données</span>
+        <span style="font-size:12px;font-weight:700;color:var(--g)">${score} pts</span>
+      </div>
+    </div>`;
+
+  // Inventory
+  const caTotal = DB.factures.filter(f=>f.status==='payé').reduce((s,f)=>s+f.montant,0);
+  const caPartiel = DB.factures.filter(f=>f.status==='partiel').reduce((s,f)=>s+(f.paidAmount||0),0);
+  document.getElementById('donnees-inventory').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${[
+        ['👥','Clients',DB.clients.length],
+        ['📁','Projets',DB.projets.length],
+        ['📄','Devis & Factures',DB.factures.length],
+        ['📣','Leads',DB.leads.length],
+        ['💰','Tarifs',DB.tarifs.length],
+        ['💶','CA encaissé',fe(caTotal+caPartiel)],
+      ].map(([icon,label,val])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--t2)">${icon} ${label}</span>
+          <span style="font-size:13px;font-weight:700">${val}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+function forceSyncNow(){
+  if(!window._fbSave){toast('Firebase non disponible');return;}
+  window._fbSave(DB).then(()=>{
+    toast('✅ Synchronisation forcée avec Firebase');
+    rDonnees();
+  }).catch(()=>toast('❌ Erreur de synchronisation'));
+}
+
+function resetSection(section){
+  if(!confirm(`Vider la section "${section}" ?\n\nToutes les données de cette section seront supprimées.\nFais un backup avant !`)) return;
+  if(!confirm(`Dernière confirmation — tu vas perdre ${DB[section]?.length||0} enregistrement(s). Continuer ?`)) return;
+  DB[section] = [];
+  sv();
+  toast(`✅ Section "${section}" vidée`);
+  rDonnees();
+}
+
+function resetAll(){
+  if(!confirm('⚠️ ATTENTION — Cela va effacer TOUTES tes données.\n\nClients, projets, devis, leads, tarifs... Tout.\n\nFais absolument un backup avant !')) return;
+  if(!confirm('Dernière chance — es-tu vraiment sûr(e) ? Cette action est IRRÉVERSIBLE.')) return;
+  const backup = prompt('Pour confirmer, tape "RESET" en majuscules :');
+  if(backup !== 'RESET'){toast('Réinitialisation annulée');return;}
+  DB = {clients:[],projets:[],factures:[],leads:[],tarifs:[...DEFAULT_TARIFS]};
+  localStorage.setItem(KEY, JSON.stringify(DB));
+  localStorage.removeItem(KEY+'_score');
+  if(window._fbSave) window._fbSave(DB);
+  toast('✅ Données réinitialisées');
+  rDonnees();
+  rDash();
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 load();
@@ -742,7 +915,7 @@ const ICO={'Création graphique':'🎨','Identité visuelle':'🏷','Marketing d
 // NAV
 function navTo(tab){
   const ni=document.querySelectorAll('.ni');
-  const map={dashboard:0,clients:1,projets:2,factures:3,agenda:4,prospection:5,tarifs:6};
+  const map={dashboard:0,clients:1,projets:2,factures:3,agenda:4,prospection:5,tarifs:6,donnees:7};
   goTo(tab,ni[map[tab]]);
 }
 function goTo(tab,el){
@@ -750,8 +923,8 @@ function goTo(tab,el){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
   document.getElementById('tab-'+tab).classList.add('on');
   el.classList.add('on');
-  const titles={dashboard:'Dashboard',clients:'Clients',projets:'Projets',factures:'Devis & Factures',agenda:'Agenda',prospection:'Prospection',tarifs:'Tarifs & Services'};
-  const subs={dashboard:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),clients:`${DB.clients.length} client(s)`,projets:`${DB.projets.length} projet(s)`,factures:`${DB.factures.length} document(s)`,agenda:'Deadlines et échéances',prospection:`${DB.leads.length} lead(s)`,tarifs:`${DB.tarifs.length} service(s)`};
+  const titles={dashboard:'Dashboard',clients:'Clients',projets:'Projets',factures:'Devis & Factures',agenda:'Agenda',prospection:'Prospection',tarifs:'Tarifs & Services',donnees:'Données & Backup'};
+  const subs={dashboard:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),clients:`${DB.clients.length} client(s)`,projets:`${DB.projets.length} projet(s)`,factures:`${DB.factures.length} document(s)`,agenda:'Deadlines et échéances',prospection:`${DB.leads.length} lead(s)`,tarifs:`${DB.tarifs.length} service(s)`,donnees:'Backup, export et synchronisation'};
   document.getElementById('pt').textContent=titles[tab]||tab;
   document.getElementById('ps').textContent=subs[tab]||'';
   const acts={
@@ -760,6 +933,7 @@ function goTo(tab,el){
     factures:'<button class="btn bp" onclick="openF()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouveau devis</button>',
     agenda:'<button class="btn bp" onclick="openDayPopup(td())"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouveau RDV</button>',
     tarifs:'<button class="btn bp" onclick="openTarif()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouveau service</button>',
+    donnees:'<button class="btn bp" onclick="backupJSON()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Backup maintenant</button>',
   };
   document.getElementById('ta').innerHTML=acts[tab]||'';
   if(tab==='dashboard')rDash();
@@ -769,6 +943,7 @@ function goTo(tab,el){
   if(tab==='agenda')rAgenda();
   if(tab==='prospection')rProspection();
   if(tab==='tarifs')rTarifs();
+  if(tab==='donnees')rDonnees();
 }
 
 // MODALS
@@ -2146,6 +2321,59 @@ function showExportMenu(){
   document.getElementById('modal-export').classList.add('on');
 }
 
+function backupJSON(){
+  // Crée une copie propre sans les PDFs en base64 (trop lourds)
+  const backup = JSON.parse(JSON.stringify(DB));
+  // On garde les PDFs — backup complet
+  const date = new Date().toISOString().slice(0,10);
+  const time = new Date().toTimeString().slice(0,5).replace(':','-');
+  const filename = `studio-achis-backup-${date}-${time}.json`;
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('✅ Backup téléchargé — garde-le précieusement !');
+  closeM('modal-export');
+}
+
+function importJSON(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      // Validation basique
+      if(!data.clients || !Array.isArray(data.clients)){
+        alert('❌ Fichier invalide — ce n\'est pas un backup Studio Achis.');
+        return;
+      }
+      if(!confirm(`Restaurer ce backup ?\n\n• ${data.clients.length} clients\n• ${(data.projets||[]).length} projets\n• ${(data.factures||[]).length} documents\n• ${(data.tarifs||[]).length} tarifs\n\nAttention : les données actuelles seront remplacées.`)) return;
+      // Assure les tableaux manquants
+      if(!data.projets) data.projets = [];
+      if(!data.leads) data.leads = [];
+      if(!data.tarifs || !data.tarifs.length) data.tarifs = DB.tarifs;
+      // Dedup factures
+      if(data.factures){const seen=new Set();data.factures=data.factures.filter(f=>{if(!f.fromDevis)return true;if(seen.has(f.fromDevis))return false;seen.add(f.fromDevis);return true;});}
+      DB = data;
+      localStorage.setItem(KEY, JSON.stringify(DB));
+      if(window._fbSave) window._fbSave(DB);
+      closeM('modal-export');
+      toast('✅ Données restaurées avec succès !');
+      setTimeout(()=>location.reload(), 1200);
+    } catch(err){
+      alert('❌ Erreur de lecture du fichier. Assure-toi que c\'est bien un backup .json valide.');
+    }
+  };
+  reader.readAsText(file);
+  input.value = ''; // reset pour permettre re-import du même fichier
+}
+
 function dlXlsx(wb, filename){
   XLSX.writeFile(wb, filename);
   toast('Export téléchargé ✓');
@@ -2320,11 +2548,22 @@ if(localStorage.getItem('sa_session')==='1'){
 }
 
 // Try to load from Firebase (cloud takes priority)
+// Score a dataset by total data richness (clients + projets + factures + leads)
+function dbScore(d){
+  if(!d) return 0;
+  return (d.clients||[]).length * 10
+       + (d.projets||[]).length * 10
+       + (d.factures||[]).length * 5
+       + (d.leads||[]).length * 2;
+}
+
 async function initFromFirebase(){
   if(window._fbLoad){
     const cloudData = await window._fbLoad();
-    const localHasData = DB.clients && DB.clients.length > 0;
-    const cloudHasData = cloudData && cloudData.clients && cloudData.clients.length > 0;
+    const localScore = dbScore(DB);
+    const cloudScore = dbScore(cloudData);
+    const localHasData = localScore > 0;
+    const cloudHasData = cloudScore > 0;
 
     if(cloudHasData && !localHasData){
       // Cloud has data, local is empty → load from cloud
@@ -2338,14 +2577,19 @@ async function initFromFirebase(){
       await window._fbSave(DB);
       showCloudBadge(true);
     } else if(cloudHasData && localHasData){
-      // Both have data → use the one with more content (more clients)
-      if(cloudData.clients.length >= DB.clients.length){
+      // Both have data → use the richest dataset (clients + projets + factures combined score)
+      // NEVER let a dataset with fewer projets win over one with more projets
+      const localProjets = (DB.projets||[]).length;
+      const cloudProjets = (cloudData.projets||[]).length;
+      // If local has significantly more projets than cloud → local wins (cloud is stale/corrupt)
+      const localWins = localProjets > cloudProjets || (localScore > cloudScore && cloudProjets <= localProjets);
+      if(localWins){
+        await window._fbSave(DB);
+      } else {
         DB = cloudData;
         if(DB.factures){const seen=new Set();DB.factures=DB.factures.filter(f=>{if(!f.fromDevis)return true;if(seen.has(f.fromDevis))return false;seen.add(f.fromDevis);return true;});}
         localStorage.setItem(KEY,JSON.stringify(DB));
         rDash();
-      } else {
-        await window._fbSave(DB);
       }
       showCloudBadge(true);
     } else {
@@ -2353,6 +2597,9 @@ async function initFromFirebase(){
     }
   }
 }
+
+// Real-time listener — also uses score to avoid overwriting richer local data
+
 
 function showCloudBadge(ok){
   const badge = document.getElementById('cloud-badge');
@@ -2362,10 +2609,17 @@ function showCloudBadge(ok){
   }
 }
 
-// Real-time update handler
+// Real-time listener — also uses score to avoid overwriting richer local data
 window._fbOnUpdate = function(data){
-  // Only update if cloud has data (prevent empty cloud from wiping local)
-  if(!data || !data.clients || (data.clients.length === 0 && DB.clients && DB.clients.length > 0)) return;
+  // Never update if incoming data is less rich than current local data
+  const incomingScore = dbScore(data);
+  const currentScore = dbScore(DB);
+  const incomingProjets = (data&&data.projets||[]).length;
+  const currentProjets = (DB.projets||[]).length;
+  // Reject update if it would erase projets or is clearly less complete
+  if(!data || !data.clients) return;
+  if(incomingScore < currentScore && incomingProjets <= currentProjets) return;
+  if(currentProjets > 0 && incomingProjets === 0) return; // never wipe projets
   DB = data;
   if(DB.factures){const seen=new Set();DB.factures=DB.factures.filter(f=>{if(!f.fromDevis)return true;if(seen.has(f.fromDevis))return false;seen.add(f.fromDevis);return true;});}
   localStorage.setItem(KEY,JSON.stringify(DB));
@@ -2541,65 +2795,6 @@ document.addEventListener('click',function(e){
   </div>
 </div>
 
-
-<!-- EXPORT MODAL -->
-<div class="mo" id="modal-export">
-  <div class="modal" style="width:440px">
-    <div class="mt">Exporter les données</div>
-    <p style="font-size:13px;color:var(--t3);margin-bottom:20px;line-height:1.6">Choisis ce que tu veux exporter. Les fichiers Excel s'ouvrent directement dans Numbers ou Excel.</p>
-
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-
-      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .13s" onmouseenter="this.style.borderColor='var(--g)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="exportFactures()">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:38px;height:38px;background:rgba(77,197,37,.1);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">📊</div>
-          <div>
-            <div style="font-weight:600;font-size:14px">Devis & Factures</div>
-            <div style="font-size:12px;color:var(--t3);margin-top:2px">Toutes les factures avec statuts, montants, clients</div>
-          </div>
-          <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--g);background:var(--g10);padding:3px 9px;border-radius:99px">.xlsx</div>
-        </div>
-      </div>
-
-      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .13s" onmouseenter="this.style.borderColor='var(--g)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="exportClients()">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:38px;height:38px;background:var(--i10);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">👥</div>
-          <div>
-            <div style="font-weight:600;font-size:14px">Clients</div>
-            <div style="font-size:12px;color:var(--t3);margin-top:2px">Annuaire clients avec coordonnées et CA</div>
-          </div>
-          <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--info);background:var(--i10);padding:3px 9px;border-radius:99px">.xlsx</div>
-        </div>
-      </div>
-
-      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .13s" onmouseenter="this.style.borderColor='var(--g)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="exportProjets()">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:38px;height:38px;background:var(--w10);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">📁</div>
-          <div>
-            <div style="font-weight:600;font-size:14px">Projets</div>
-            <div style="font-size:12px;color:var(--t3);margin-top:2px">Tous les projets avec avancement et budget</div>
-          </div>
-          <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--warn);background:var(--w10);padding:3px 9px;border-radius:99px">.xlsx</div>
-        </div>
-      </div>
-
-      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .13s" onmouseenter="this.style.borderColor='var(--g)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="exportComplet()">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:38px;height:38px;background:rgba(124,58,237,.1);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>
-          <div>
-            <div style="font-weight:600;font-size:14px">Export complet</div>
-            <div style="font-size:12px;color:var(--t3);margin-top:2px">Tout dans un seul fichier — 3 onglets</div>
-          </div>
-          <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--purple);background:rgba(124,58,237,.1);padding:3px 9px;border-radius:99px">.xlsx</div>
-        </div>
-      </div>
-
-    </div>
-    <div class="ma" style="padding-top:0;border-top:none">
-      <button class="btn bg" onclick="closeM('modal-export')">Fermer</button>
-    </div>
-  </div>
-</div>
 
 <!-- DAY POPUP -->
 <div class="day-popup" id="day-popup">
