@@ -418,7 +418,13 @@ tr:hover .ab{opacity:1}
 <div class="main">
   <div class="topbar">
     <div><div class="tb-t" id="pt">Dashboard</div><div class="tb-s" id="ps"></div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+    <button onclick="showExportMenu()" class="btn" style="background:var(--bg3);border:1.5px solid var(--border2);color:var(--t2);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;border-radius:9px;padding:7px 14px;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exporter
+    </button>
     <div id="ta" style="display:flex;gap:8px;align-items:center"></div>
+  </div>
   </div>
   <div class="content">
 
@@ -661,6 +667,7 @@ tr:hover .ab{opacity:1}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // AUTH
 const CREDS={studio:'achis2026'};
@@ -2125,6 +2132,115 @@ function convertToFacture(id){
   toast('Facture F-'+refNum+' créée depuis '+d.ref+' ✓');
 }
 
+
+function showExportMenu(){
+  document.getElementById('modal-export').classList.add('on');
+}
+
+function dlXlsx(wb, filename){
+  XLSX.writeFile(wb, filename);
+  toast('Export téléchargé ✓');
+  closeM('modal-export');
+}
+
+function exportFactures(){
+  if(typeof XLSX==='undefined'){toast('Chargement en cours, réessaie...');return;}
+  const wb = XLSX.utils.book_new();
+  const rows = [['Réf.','Type','Client','Description','Date','Échéance','Montant HT (€)','TVA (%)','TVAC (€)','Statut','Notes']];
+  DB.factures.forEach(f=>{
+    const ttc = Math.round(f.montant*(1+(f.tva||0)/100));
+    rows.push([
+      f.ref||'',
+      f.type==='devis'?'Devis':'Facture',
+      cn(f.clientId),
+      f.desc||'',
+      f.date||'',
+      f.echeance||'',
+      f.montant||0,
+      f.tva||0,
+      ttc,
+      f.status||'',
+      f.notes||''
+    ]);
+  });
+  // Summary row
+  rows.push([]);
+  const paye = DB.factures.filter(x=>x.type==='facture'&&x.status==='payé').reduce((s,x)=>s+x.montant,0);
+  const att = DB.factures.filter(x=>x.type==='facture'&&(x.status==='en attente'||x.status==='retard')).reduce((s,x)=>s+x.montant,0);
+  rows.push(['TOTAL ENCAISSÉ','','','','','',paye]);
+  rows.push(['TOTAL À ENCAISSER','','','','','',att]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:8},{wch:9},{wch:20},{wch:35},{wch:12},{wch:12},{wch:14},{wch:8},{wch:12},{wch:14},{wch:25}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Factures');
+  dlXlsx(wb, 'StudioAchis_Factures_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+function exportClients(){
+  if(typeof XLSX==='undefined'){toast('Chargement en cours, réessaie...');return;}
+  const wb = XLSX.utils.book_new();
+  const rows = [['Nom','Secteur','Email','Téléphone','Ville','N° TVA','CA encaissé (€)','Projets','Devis en attente','Notes']];
+  DB.clients.forEach(c=>{
+    const ca = DB.factures.filter(f=>f.clientId===c.id&&f.type==='facture'&&f.status==='payé').reduce((s,f)=>s+f.montant,0);
+    const projs = DB.projets.filter(p=>p.clientId===c.id).length;
+    const att = DB.factures.filter(f=>f.clientId===c.id&&f.status==='en attente').length;
+    rows.push([c.name||'',c.sector||'',c.email||'',c.phone||'',c.city||'',c.tva||'',ca,projs,att,c.notes||'']);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:22},{wch:16},{wch:28},{wch:16},{wch:16},{wch:18},{wch:16},{wch:10},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Clients');
+  dlXlsx(wb, 'StudioAchis_Clients_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+function exportProjets(){
+  if(typeof XLSX==='undefined'){toast('Chargement en cours, réessaie...');return;}
+  const wb = XLSX.utils.book_new();
+  const rows = [['Nom du projet','Client','Services','Statut','Avancement (%)','Budget HT (€)','Deadline','Description']];
+  DB.projets.forEach(p=>{
+    const svcs = (p.services&&p.services.length?p.services:[p.service||'Autre']).join(', ');
+    rows.push([p.name||'',cn(p.clientId),svcs,p.status||'',p.progress||0,p.budget||0,p.deadline||'',p.desc||'']);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:28},{wch:20},{wch:30},{wch:14},{wch:14},{wch:14},{wch:12},{wch:35}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Projets');
+  dlXlsx(wb, 'StudioAchis_Projets_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+function exportComplet(){
+  if(typeof XLSX==='undefined'){toast('Chargement en cours, réessaie...');return;}
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Factures
+  const rowsF = [['Réf.','Type','Client','Description','Date','Montant HT (€)','TVA (%)','TVAC (€)','Statut']];
+  DB.factures.forEach(f=>{
+    rowsF.push([f.ref||'',f.type==='devis'?'Devis':'Facture',cn(f.clientId),f.desc||'',f.date||'',f.montant||0,f.tva||0,Math.round(f.montant*(1+(f.tva||0)/100)),f.status||'']);
+  });
+  const wsF = XLSX.utils.aoa_to_sheet(rowsF);
+  wsF['!cols']=[{wch:8},{wch:9},{wch:20},{wch:30},{wch:12},{wch:14},{wch:8},{wch:12},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsF, 'Devis & Factures');
+
+  // Sheet 2: Clients
+  const rowsC = [['Nom','Email','Téléphone','Ville','CA encaissé (€)','Projets']];
+  DB.clients.forEach(c=>{
+    const ca=DB.factures.filter(f=>f.clientId===c.id&&f.type==='facture'&&f.status==='payé').reduce((s,f)=>s+f.montant,0);
+    rowsC.push([c.name||'',c.email||'',c.phone||'',c.city||'',ca,DB.projets.filter(p=>p.clientId===c.id).length]);
+  });
+  const wsC = XLSX.utils.aoa_to_sheet(rowsC);
+  wsC['!cols']=[{wch:22},{wch:28},{wch:16},{wch:16},{wch:16},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsC, 'Clients');
+
+  // Sheet 3: Projets
+  const rowsP = [['Nom','Client','Services','Statut','Avancement (%)','Budget (€)','Deadline']];
+  DB.projets.forEach(p=>{
+    rowsP.push([p.name||'',cn(p.clientId),(p.services&&p.services.length?p.services:[p.service||'']).join(', '),p.status||'',p.progress||0,p.budget||0,p.deadline||'']);
+  });
+  const wsP = XLSX.utils.aoa_to_sheet(rowsP);
+  wsP['!cols']=[{wch:28},{wch:20},{wch:28},{wch:14},{wch:14},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsP, 'Projets');
+
+  dlXlsx(wb, 'StudioAchis_Export_Complet_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
 function viewPdf(id){
   const f=DB.factures.find(x=>x.id===id);
   if(!f||!f.pdfData){toast('Aucun PDF attaché');return;}
@@ -2388,6 +2504,66 @@ document.addEventListener('click',function(e){
         </div>
         <div id="pd-sub-list"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- EXPORT MODAL -->
+<div class="mo" id="modal-export">
+  <div class="modal" style="width:440px">
+    <div class="mt">Exporter les données</div>
+    <p style="font-size:13px;color:var(--t3);margin-bottom:20px;line-height:1.6">Choisis ce que tu veux exporter. Les fichiers Excel s'ouvrent directement dans Numbers ou Excel.</p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+
+      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .13s" onmouseenter="this.style.borderColor='var(--g)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="exportFactures()">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;background:rgba(77,197,37,.1);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">📊</div>
+          <div>
+            <div style="font-weight:600;font-size:14px">Devis & Factures</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:2px">Toutes les factures avec statuts, montants, clients</div>
+          </div>
+          <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--g);background:var(--g10);padding:3px 9px;border-radius:99px">.xlsx</div>
+        </div>
+      </div>
+
+      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .13s" onmouseenter="this.style.borderColor='var(--g)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="exportClients()">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;background:var(--i10);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">👥</div>
+          <div>
+            <div style="font-weight:600;font-size:14px">Clients</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:2px">Annuaire clients avec coordonnées et CA</div>
+          </div>
+          <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--info);background:var(--i10);padding:3px 9px;border-radius:99px">.xlsx</div>
+        </div>
+      </div>
+
+      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .13s" onmouseenter="this.style.borderColor='var(--g)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="exportProjets()">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;background:var(--w10);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">📁</div>
+          <div>
+            <div style="font-weight:600;font-size:14px">Projets</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:2px">Tous les projets avec avancement et budget</div>
+          </div>
+          <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--warn);background:var(--w10);padding:3px 9px;border-radius:99px">.xlsx</div>
+        </div>
+      </div>
+
+      <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .13s" onmouseenter="this.style.borderColor='var(--g)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="exportComplet()">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;background:rgba(124,58,237,.1);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>
+          <div>
+            <div style="font-weight:600;font-size:14px">Export complet</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:2px">Tout dans un seul fichier — 3 onglets</div>
+          </div>
+          <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--purple);background:rgba(124,58,237,.1);padding:3px 9px;border-radius:99px">.xlsx</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="ma" style="padding-top:0;border-top:none">
+      <button class="btn bg" onclick="closeM('modal-export')">Fermer</button>
     </div>
   </div>
 </div>
