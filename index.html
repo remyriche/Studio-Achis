@@ -2323,16 +2323,32 @@ if(localStorage.getItem('sa_session')==='1'){
 async function initFromFirebase(){
   if(window._fbLoad){
     const cloudData = await window._fbLoad();
-    if(cloudData && cloudData.clients){
+    const localHasData = DB.clients && DB.clients.length > 0;
+    const cloudHasData = cloudData && cloudData.clients && cloudData.clients.length > 0;
+
+    if(cloudHasData && !localHasData){
+      // Cloud has data, local is empty → load from cloud
       DB = cloudData;
-      // Dedup
       if(DB.factures){const seen=new Set();DB.factures=DB.factures.filter(f=>{if(!f.fromDevis)return true;if(seen.has(f.fromDevis))return false;seen.add(f.fromDevis);return true;});}
       localStorage.setItem(KEY,JSON.stringify(DB));
-      rDash();rClients&&rClients();
+      rDash();
       showCloudBadge(true);
-    } else if(DB.clients && DB.clients.length){
-      // No cloud data yet — push local data to cloud
-      window._fbSave(DB);
+    } else if(localHasData && !cloudHasData){
+      // Local has data, cloud is empty → push local to cloud
+      await window._fbSave(DB);
+      showCloudBadge(true);
+    } else if(cloudHasData && localHasData){
+      // Both have data → use the one with more content (more clients)
+      if(cloudData.clients.length >= DB.clients.length){
+        DB = cloudData;
+        if(DB.factures){const seen=new Set();DB.factures=DB.factures.filter(f=>{if(!f.fromDevis)return true;if(seen.has(f.fromDevis))return false;seen.add(f.fromDevis);return true;});}
+        localStorage.setItem(KEY,JSON.stringify(DB));
+        rDash();
+      } else {
+        await window._fbSave(DB);
+      }
+      showCloudBadge(true);
+    } else {
       showCloudBadge(true);
     }
   }
@@ -2348,6 +2364,8 @@ function showCloudBadge(ok){
 
 // Real-time update handler
 window._fbOnUpdate = function(data){
+  // Only update if cloud has data (prevent empty cloud from wiping local)
+  if(!data || !data.clients || (data.clients.length === 0 && DB.clients && DB.clients.length > 0)) return;
   DB = data;
   if(DB.factures){const seen=new Set();DB.factures=DB.factures.filter(f=>{if(!f.fromDevis)return true;if(seen.has(f.fromDevis))return false;seen.add(f.fromDevis);return true;});}
   localStorage.setItem(KEY,JSON.stringify(DB));
